@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+.spago/
+
+# Build output
+output/
+dist/
+
+# Lock files
+package-lock.json
+spago.lock
