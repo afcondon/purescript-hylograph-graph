@@ -30,6 +30,16 @@ module Data.Graph.Algorithms
   , graphMetrics
   , density
   , averageDegree
+    -- Strongly connected components
+  , stronglyConnectedComponents
+  , isSCC
+    -- PageRank
+  , pageRank
+  , pageRankWithConfig
+  , PageRankConfig
+    -- Community detection
+  , labelPropagation
+  , modularity
     -- Conversion
   , taskNodesToSimpleGraph
   , simpleGraphToTaskNodes
@@ -44,6 +54,7 @@ import Data.Array (concat, foldl, (\\))
 import Data.Array as Array
 import Data.Foldable (maximum)
 import Data.Int as Int
+import Data.Number (abs) as Number
 import Data.Graph (Graph, fromMap, topologicalSort)
 import Data.List (List)
 import Data.List as List
@@ -489,3 +500,311 @@ averageDegree graph =
 -- | Helper to convert Int to Number
 toNumber :: Int -> Number
 toNumber = Int.toNumber
+
+-- =============================================================================
+-- || Strongly Connected Components (Tarjan's Algorithm)
+-- =============================================================================
+
+-- | Find all strongly connected components using Tarjan's algorithm
+-- |
+-- | Returns components in reverse topological order (leaf components first).
+-- | Each component is a set of nodes that are mutually reachable.
+stronglyConnectedComponents :: forall node. Ord node => SimpleGraph node -> Array (Set node)
+stronglyConnectedComponents graph =
+  let
+    initialState =
+      { index: 0
+      , stack: []
+      , onStack: Set.empty
+      , indices: Map.empty
+      , lowlinks: Map.empty
+      , sccs: []
+      }
+
+    result = foldl (\state node ->
+      if Map.member node state.indices
+      then state
+      else tarjanDFS state node
+    ) initialState graph.nodes
+  in result.sccs
+  where
+  tarjanDFS :: TarjanState node -> node -> TarjanState node
+  tarjanDFS state v =
+    let
+      -- Set the depth index and lowlink for v
+      state' = state
+        { index = state.index + 1
+        , stack = Array.cons v state.stack
+        , onStack = Set.insert v state.onStack
+        , indices = Map.insert v state.index state.indices
+        , lowlinks = Map.insert v state.index state.lowlinks
+        }
+
+      -- Get successors of v
+      successors = case Map.lookup v graph.edges of
+        Nothing -> []
+        Just targets -> Set.toUnfoldable targets :: Array node
+
+      -- Process all successors
+      state'' = foldl (processSuccessor v) state' successors
+
+      -- Get v's lowlink
+      vLowlink = fromMaybe 0 $ Map.lookup v state''.lowlinks
+      vIndex = fromMaybe 0 $ Map.lookup v state''.indices
+    in
+      if vLowlink == vIndex
+      then popSCC state'' v
+      else state''
+
+  processSuccessor :: node -> TarjanState node -> node -> TarjanState node
+  processSuccessor v state w =
+    case Map.lookup w state.indices of
+      Nothing ->
+        -- w has not been visited; recurse
+        let state' = tarjanDFS state w
+            wLowlink = fromMaybe 0 $ Map.lookup w state'.lowlinks
+            vLowlink = fromMaybe 0 $ Map.lookup v state'.lowlinks
+        in state' { lowlinks = Map.insert v (min vLowlink wLowlink) state'.lowlinks }
+      Just wIndex ->
+        -- w is already visited
+        if Set.member w state.onStack
+        then
+          -- w is on stack, so it's in the current SCC
+          let vLowlink = fromMaybe 0 $ Map.lookup v state.lowlinks
+          in state { lowlinks = Map.insert v (min vLowlink wIndex) state.lowlinks }
+        else state
+
+  popSCC :: TarjanState node -> node -> TarjanState node
+  popSCC state v =
+    let
+      -- Pop nodes until we get to v
+      result = popUntil state.stack v Set.empty
+    in state
+         { stack = result.remaining
+         , onStack = foldl (flip Set.delete) state.onStack (Set.toUnfoldable result.scc :: Array node)
+         , sccs = Array.snoc state.sccs result.scc
+         }
+
+  popUntil :: Array node -> node -> Set node -> { scc :: Set node, remaining :: Array node }
+  popUntil stack target acc =
+    case Array.uncons stack of
+      Nothing -> { scc: acc, remaining: [] }
+      Just { head, tail } ->
+        let acc' = Set.insert head acc
+        in if head == target
+           then { scc: acc', remaining: tail }
+           else popUntil tail target acc'
+
+type TarjanState node =
+  { index :: Int
+  , stack :: Array node
+  , onStack :: Set node
+  , indices :: Map node Int
+  , lowlinks :: Map node Int
+  , sccs :: Array (Set node)
+  }
+
+-- | Check if a graph is a single SCC (strongly connected)
+isSCC :: forall node. Ord node => SimpleGraph node -> Boolean
+isSCC graph =
+  let components = stronglyConnectedComponents graph
+  in Array.length components == 1
+
+-- =============================================================================
+-- || PageRank
+-- =============================================================================
+
+-- | Configuration for PageRank algorithm
+type PageRankConfig =
+  { dampingFactor :: Number   -- Typically 0.85
+  , iterations :: Int         -- Number of iterations
+  , tolerance :: Number       -- Convergence tolerance
+  }
+
+-- | Default PageRank configuration
+defaultPageRankConfig :: PageRankConfig
+defaultPageRankConfig =
+  { dampingFactor: 0.85
+  , iterations: 100
+  , tolerance: 1.0e-6
+  }
+
+-- | Compute PageRank scores for all nodes
+-- |
+-- | Uses the default configuration (damping factor 0.85, 100 iterations).
+pageRank :: forall node. Ord node => SimpleGraph node -> Map node Number
+pageRank = pageRankWithConfig defaultPageRankConfig
+
+-- | Compute PageRank with custom configuration
+pageRankWithConfig :: forall node. Ord node => PageRankConfig -> SimpleGraph node -> Map node Number
+pageRankWithConfig config graph =
+  let
+    n = Array.length graph.nodes
+    initialScore = if n == 0 then 0.0 else 1.0 / toNumber n
+    initialRanks = Map.fromFoldable $ graph.nodes <#> \node -> Tuple node initialScore
+
+    -- Precompute out-degrees for efficiency
+    outDegrees = Map.fromFoldable $ graph.nodes <#> \node ->
+      Tuple node $ case Map.lookup node graph.edges of
+        Nothing -> 0
+        Just targets -> Set.size targets
+
+    -- Build reverse adjacency (who links to me?)
+    reverseEdges = buildReverseEdges graph
+
+    iterate :: Int -> Map node Number -> Map node Number
+    iterate remaining ranks
+      | remaining <= 0 = ranks
+      | otherwise =
+          let newRanks = computeNewRanks ranks
+              converged = hasConverged ranks newRanks
+          in if converged
+             then newRanks
+             else iterate (remaining - 1) newRanks
+
+    computeNewRanks :: Map node Number -> Map node Number
+    computeNewRanks ranks =
+      Map.fromFoldable $ graph.nodes <#> \node ->
+        let
+          -- Get nodes that link to this node
+          inLinks = fromMaybe Set.empty $ Map.lookup node reverseEdges
+
+          -- Sum contributions from incoming links
+          contribution = foldl (\acc source ->
+            let sourceRank = fromMaybe 0.0 $ Map.lookup source ranks
+                sourceOutDeg = fromMaybe 1 $ Map.lookup source outDegrees
+            in acc + sourceRank / toNumber (max 1 sourceOutDeg)
+          ) 0.0 (Set.toUnfoldable inLinks :: Array node)
+
+          -- Apply damping formula
+          newRank = (1.0 - config.dampingFactor) / toNumber n + config.dampingFactor * contribution
+        in Tuple node newRank
+
+    hasConverged :: Map node Number -> Map node Number -> Boolean
+    hasConverged old new =
+      let diff = foldl (\acc node ->
+            let oldVal = fromMaybe 0.0 $ Map.lookup node old
+                newVal = fromMaybe 0.0 $ Map.lookup node new
+            in acc + Number.abs (newVal - oldVal)
+          ) 0.0 graph.nodes
+      in diff < config.tolerance
+  in
+    iterate config.iterations initialRanks
+
+-- | Build reverse adjacency map (target -> set of sources)
+buildReverseEdges :: forall node. Ord node => SimpleGraph node -> Map node (Set node)
+buildReverseEdges graph =
+  foldl (\acc (Tuple source targets) ->
+    foldl (\a target ->
+      Map.alter (Just <<< Set.insert source <<< fromMaybe Set.empty) target a
+    ) acc (Set.toUnfoldable targets :: Array node)
+  ) Map.empty (Map.toUnfoldable graph.edges :: Array (Tuple node (Set node)))
+
+-- =============================================================================
+-- || Community Detection (Label Propagation)
+-- =============================================================================
+
+-- | Community detection using label propagation
+-- |
+-- | Each node starts with its own label. In each iteration, nodes adopt
+-- | the most common label among their neighbors. Returns a map from
+-- | node to community label (using a representative node ID).
+labelPropagation :: forall node. Ord node => SimpleGraph node -> Map node node
+labelPropagation graph =
+  let
+    -- Initial labels: each node is its own community
+    initialLabels = Map.fromFoldable $ graph.nodes <#> \n -> Tuple n n
+
+    -- Build undirected neighbors
+    undirectedNeighbors = buildUndirectedNeighbors graph
+
+    -- Run iterations until convergence
+    iterate :: Int -> Map node node -> Map node node
+    iterate remaining labels
+      | remaining <= 0 = labels
+      | otherwise =
+          let newLabels = propagateOnce labels
+          in if labels == newLabels
+             then labels
+             else iterate (remaining - 1) newLabels
+
+    propagateOnce :: Map node node -> Map node node
+    propagateOnce labels =
+      foldl (\acc node ->
+        let neighbors = fromMaybe Set.empty $ Map.lookup node undirectedNeighbors
+            neighborLabels = Array.catMaybes $
+              (Set.toUnfoldable neighbors :: Array node) <#> \n ->
+                Map.lookup n acc
+            mostCommon = findMostCommon neighborLabels
+            newLabel = case mostCommon of
+              Nothing -> node  -- Keep own label if no neighbors
+              Just l -> l
+        in Map.insert node newLabel acc
+      ) labels graph.nodes
+  in
+    iterate 100 initialLabels
+  where
+  buildUndirectedNeighbors :: SimpleGraph node -> Map node (Set node)
+  buildUndirectedNeighbors g =
+    foldl (\acc (Tuple src targets) ->
+      let
+        acc' = Map.alter (Just <<< Set.union targets <<< fromMaybe Set.empty) src acc
+        acc'' = foldl (\a tgt ->
+          Map.alter (Just <<< Set.insert src <<< fromMaybe Set.empty) tgt a
+        ) acc' (Set.toUnfoldable targets :: Array node)
+      in acc''
+    ) Map.empty (Map.toUnfoldable g.edges :: Array (Tuple node (Set node)))
+
+  findMostCommon :: Array node -> Maybe node
+  findMostCommon labels =
+    let counts = foldl (\acc l ->
+          Map.alter (Just <<< (_ + 1) <<< fromMaybe 0) l acc
+        ) Map.empty labels
+        maxEntry = foldl (\best (Tuple label count) ->
+          case best of
+            Nothing -> Just (Tuple label count)
+            Just (Tuple _ bestCount) ->
+              if count > bestCount
+              then Just (Tuple label count)
+              else best
+        ) Nothing (Map.toUnfoldable counts :: Array (Tuple node Int))
+    in map (\(Tuple l _) -> l) maxEntry
+
+-- | Compute modularity of a community assignment
+-- |
+-- | Modularity measures how good a community structure is.
+-- | Higher values (max 1.0) indicate better community separation.
+modularity :: forall node. Ord node => SimpleGraph node -> Map node node -> Number
+modularity graph communities =
+  let
+    m = toNumber $ Array.length (getAllEdges graph)
+    twoM = 2.0 * m
+
+    result = foldl (\acc (Tuple source targets) ->
+      let
+        sourceCommunity = Map.lookup source communities
+        sourceOutDeg = Set.size targets
+        sourceInDeg = countInDegree source
+      in foldl (\a target ->
+           let
+             targetCommunity = Map.lookup target communities
+             targetOutDeg = case Map.lookup target graph.edges of
+               Nothing -> 0
+               Just t -> Set.size t
+             targetInDeg = countInDegree target
+             -- Add 1 if in same community (Kronecker delta)
+             sameComm = if sourceCommunity == targetCommunity then 1.0 else 0.0
+             -- Expected edges under null model
+             expected = toNumber (sourceOutDeg + sourceInDeg) * toNumber (targetOutDeg + targetInDeg) / twoM
+           in a + sameComm - expected
+         ) acc (Set.toUnfoldable targets :: Array node)
+    ) 0.0 (Map.toUnfoldable graph.edges :: Array (Tuple node (Set node)))
+  in
+    if m == 0.0 then 0.0 else result / twoM
+
+  where
+  countInDegree :: node -> Int
+  countInDegree n =
+    foldl (\acc (Tuple _ targets) ->
+      if Set.member n targets then acc + 1 else acc
+    ) 0 (Map.toUnfoldable graph.edges :: Array (Tuple node (Set node)))
