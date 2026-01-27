@@ -1,0 +1,221 @@
+= Module Overview
+:description: Reference for all PSD3 Graph modules
+
+== Data.Graph.Types
+
+Core graph data structures.
+
+[source,purescript]
+----
+-- Node identifier
+newtype NodeId = NodeId String
+
+-- Weighted edge
+type Edge =
+  { from :: NodeId
+  , to :: NodeId
+  , weight :: Number
+  }
+
+-- Path through graph
+type Path = Array NodeId
+
+-- Graph with adjacency list
+newtype Graph = Graph
+  { nodeSet :: Array NodeId
+  , edgeList :: Array Edge
+  , adjacency :: Map NodeId (Array { neighbor :: NodeId, weight :: Number })
+  , positions :: Map NodeId { x :: Number, y :: Number }
+  }
+
+-- Construction
+mkGraph :: Array NodeId -> Array Edge -> Graph
+
+-- Queries
+nodes :: Graph -> Array NodeId
+edges :: Graph -> Array Edge
+neighbors :: NodeId -> Graph -> Array { neighbor :: NodeId, weight :: Number }
+edgeWeight :: NodeId -> NodeId -> Graph -> Maybe Number
+nodePositions :: Graph -> Map NodeId { x :: Number, y :: Number }
+
+-- Modification
+updateWeight :: NodeId -> NodeId -> Number -> Graph -> Graph
+----
+
+== Data.Graph.Pathfinding
+
+Pathfinding algorithms.
+
+[source,purescript]
+----
+-- Result types
+data PathResult
+  = PathFound { path :: Path, cost :: Number }
+  | NoPath
+  | SameNode
+
+type SearchResult =
+  { distances :: Map NodeId Number
+  , parents :: Map NodeId NodeId
+  , visited :: Array NodeId
+  }
+
+-- Weighted shortest path
+dijkstra :: NodeId -> Graph -> SearchResult
+shortestPath :: NodeId -> NodeId -> Graph -> PathResult
+
+-- Traversal
+bfs :: NodeId -> Graph -> SearchResult
+bfsFrom :: NodeId -> Graph -> Array NodeId
+dfs :: NodeId -> Graph -> SearchResult
+dfsFrom :: NodeId -> Graph -> Array NodeId
+----
+
+== Data.Graph.Algorithms
+
+Graph analysis algorithms. Works with `SimpleGraph`:
+
+[source,purescript]
+----
+type SimpleGraph node =
+  { nodes :: Array node
+  , edges :: Map node (Set node)
+  }
+----
+
+=== Reachability
+
+[source,purescript]
+----
+reachableFrom :: forall node. Ord node => node -> SimpleGraph node -> Set node
+----
+
+=== Topological Sort
+
+[source,purescript]
+----
+type TaskNode node = { id :: node, depends :: Array node }
+type LayeredNode node = { id :: node, layer :: Int, depends :: Array node }
+
+getTopologicalOrder :: forall node. Ord node => Array (TaskNode node) -> List node
+computeLayers :: forall node. Ord node => Array (TaskNode node) -> Map node Int
+addLayers :: forall node. Ord node => Array (TaskNode node) -> Array (LayeredNode node)
+----
+
+=== Cycle Detection
+
+[source,purescript]
+----
+hasCycle :: forall node. Ord node => SimpleGraph node -> Boolean
+findCycle :: forall node. Ord node => SimpleGraph node -> Maybe (Array node)
+isDAG :: forall node. Ord node => SimpleGraph node -> Boolean
+----
+
+=== Connected Components
+
+[source,purescript]
+----
+connectedComponents :: forall node. Ord node => SimpleGraph node -> Array (Set node)
+isConnected :: forall node. Ord node => SimpleGraph node -> Boolean
+stronglyConnectedComponents :: forall node. Ord node => SimpleGraph node -> Array (Set node)
+isSCC :: forall node. Ord node => SimpleGraph node -> Boolean
+----
+
+=== Centrality
+
+[source,purescript]
+----
+degreeCentrality :: forall node. Ord node => SimpleGraph node -> Map node Number
+inDegreeCentrality :: forall node. Ord node => SimpleGraph node -> Map node Number
+outDegreeCentrality :: forall node. Ord node => SimpleGraph node -> Map node Number
+----
+
+=== PageRank
+
+[source,purescript]
+----
+type PageRankConfig =
+  { dampingFactor :: Number  -- Default 0.85
+  , iterations :: Int        -- Default 100
+  , tolerance :: Number      -- Default 1e-6
+  }
+
+pageRank :: forall node. Ord node => SimpleGraph node -> Map node Number
+pageRankWithConfig :: forall node. Ord node => PageRankConfig -> SimpleGraph node -> Map node Number
+----
+
+=== Community Detection
+
+[source,purescript]
+----
+labelPropagation :: forall node. Ord node => SimpleGraph node -> Map node node
+modularity :: forall node. Ord node => SimpleGraph node -> Map node node -> Number
+----
+
+=== Graph Metrics
+
+[source,purescript]
+----
+type GraphMetrics =
+  { nodeCount :: Int
+  , edgeCount :: Int
+  , density :: Number
+  , averageDegree :: Number
+  , isConnected :: Boolean
+  , isDAG :: Boolean
+  , componentCount :: Int
+  }
+
+graphMetrics :: forall node. Ord node => SimpleGraph node -> GraphMetrics
+density :: forall node. Ord node => SimpleGraph node -> Number
+averageDegree :: forall node. Ord node => SimpleGraph node -> Number
+----
+
+=== Transitive Reduction
+
+[source,purescript]
+----
+transitiveReduction :: forall node. Ord node => SimpleGraph node -> SimpleGraph node
+getRemovedEdges :: forall node. Ord node => SimpleGraph node -> SimpleGraph node -> Array (Tuple node node)
+getAllEdges :: forall node. Ord node => SimpleGraph node -> Array (Tuple node node)
+----
+
+=== Conversion
+
+[source,purescript]
+----
+taskNodesToSimpleGraph :: forall node. Ord node => Array (TaskNode node) -> SimpleGraph node
+simpleGraphToTaskNodes :: forall node. Ord node => SimpleGraph node -> Array (TaskNode node)
+----
+
+== Data.Graph.Pathfinding.Traced
+
+Visualization-friendly pathfinding with step recording.
+
+[source,purescript]
+----
+type TracedResult =
+  { result :: PathResult
+  , steps :: Array PathfindingStep
+  }
+
+dijkstraTraced :: NodeId -> NodeId -> Graph -> TracedResult
+----
+
+== Data.Graph.Layout
+
+Graph layout utilities.
+
+[source,purescript]
+----
+-- Integrates with psd3-simulation for force-directed layout
+----
+
+== PSD3.Data.DAGTree
+
+Directed Acyclic Graph as a tree structure.
+
+[source,purescript]
+----
+-- DAG with tree-like interface for visualization
+----

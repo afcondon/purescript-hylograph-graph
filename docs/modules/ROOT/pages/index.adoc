@@ -1,0 +1,80 @@
+= PSD3 Graph
+:description: Graph data structures and algorithms for PureScript
+
+Pure PureScript implementations of graph data structures and algorithms for analysis and visualization.
+
+== What is PSD3 Graph?
+
+PSD3 Graph provides core graph types and algorithms commonly needed for data visualization and analysis. All algorithms are pure functions with no side effects.
+
+[source,purescript]
+----
+import Data.Graph.Types (mkGraph, NodeId(..))
+import Data.Graph.Pathfinding (shortestPath, PathResult(..))
+
+-- Create a weighted graph
+let graph = mkGraph
+      [ NodeId "A", NodeId "B", NodeId "C" ]
+      [ { from: NodeId "A", to: NodeId "B", weight: 1.0 }
+      , { from: NodeId "B", to: NodeId "C", weight: 2.0 }
+      ]
+
+-- Find shortest path
+case shortestPath (NodeId "A") (NodeId "C") graph of
+  PathFound { path, cost } -> log $ "Path: " <> show path <> " (cost: " <> show cost <> ")"
+  NoPath -> log "No path exists"
+  SameNode -> log "Start equals goal"
+----
+
+== Features
+
+=== Pathfinding
+
+* *Dijkstra's Algorithm* - Weighted shortest paths
+* *BFS* - Unweighted shortest paths / level-order traversal
+* *DFS* - Depth-first traversal
+
+=== Graph Analysis
+
+* *Cycle Detection* - Find cycles in directed graphs
+* *Topological Sort* - Order nodes respecting dependencies
+* *Connected Components* - Find disconnected subgraphs
+* *Strongly Connected Components* - Tarjan's algorithm
+
+=== Centrality & Ranking
+
+* *PageRank* - Node importance scoring
+* *Degree Centrality* - In/out/total degree measures
+* *Graph Metrics* - Density, average degree, etc.
+
+=== Community Detection
+
+* *Label Propagation* - Discover community structure
+* *Modularity* - Measure community quality
+
+=== Utilities
+
+* *Transitive Reduction* - Remove redundant edges
+* *Reachability* - Find all reachable nodes
+* *DAG Layers* - Assign depth layers to DAG nodes
+
+== Getting Started
+
+* xref:getting-started/quickstart.adoc[Quickstart] - Basic graph operations
+* xref:getting-started/pathfinding.adoc[Pathfinding] - Finding shortest paths
+* xref:getting-started/analysis.adoc[Graph Analysis] - Analyzing graph structure
+
+== Installation
+
+[source,bash]
+----
+spago install psd3-graph
+----
+
+== Part of the PSD3 Ecosystem
+
+* *psd3-tree* - Tree data structures (dependency)
+* *psd3-selection* - D3 selection and rendering library
+* *psd3-simulation* - Force simulation engine
+* *psd3-layout* - Layout algorithms
+* *psd3-graph* - Graph algorithms (this package)

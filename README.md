@@ -1,5 +1,7 @@
 # purescript-psd3-graph
 
+[![Honeycomb Puzzle Demo](../../site/lib-graph/public/demo.jpeg)](/honeycomb/)
+
 Graph algorithms and data structures for PureScript, designed for visualization.
 
 ## Overview

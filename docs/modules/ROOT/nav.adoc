@@ -1,0 +1,21 @@
+.Getting Started
+* xref:getting-started/quickstart.adoc[Quickstart]
+* xref:getting-started/pathfinding.adoc[Pathfinding]
+* xref:getting-started/analysis.adoc[Graph Analysis]
+
+.How-To Guides
+* xref:how-to/shortest-paths.adoc[Shortest Paths]
+* xref:how-to/cycle-detection.adoc[Cycle Detection]
+* xref:how-to/topological-sort.adoc[Topological Sort]
+* xref:how-to/community-detection.adoc[Community Detection]
+* xref:how-to/pagerank.adoc[PageRank]
+
+.Understanding
+* xref:understanding/graph-types.adoc[Graph Types]
+* xref:understanding/algorithm-complexity.adoc[Algorithm Complexity]
+* xref:understanding/design-decisions.adoc[Design Decisions]
+
+.Reference
+* xref:reference/module-overview.adoc[Module Overview]
+* xref:reference/types-api.adoc[Types API]
+* xref:reference/algorithms-api.adoc[Algorithms API]

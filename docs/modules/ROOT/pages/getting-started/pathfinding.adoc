@@ -1,0 +1,141 @@
+= Pathfinding
+:description: Finding paths through graphs
+
+PSD3 Graph provides several pathfinding algorithms for different use cases.
+
+== Dijkstra's Algorithm (Weighted)
+
+For graphs with edge weights, use Dijkstra's algorithm:
+
+[source,purescript]
+----
+import Data.Graph.Pathfinding (dijkstra, shortestPath, PathResult(..))
+import Data.Graph.Types (NodeId(..), mkGraph)
+
+let graph = mkGraph
+      [ NodeId "A", NodeId "B", NodeId "C" ]
+      [ { from: NodeId "A", to: NodeId "B", weight: 1.0 }
+      , { from: NodeId "A", to: NodeId "C", weight: 4.0 }
+      , { from: NodeId "B", to: NodeId "C", weight: 2.0 }
+      ]
+
+-- Find shortest path A → C
+case shortestPath (NodeId "A") (NodeId "C") graph of
+  PathFound { path, cost } ->
+    -- path = [NodeId "A", NodeId "B", NodeId "C"]
+    -- cost = 3.0 (going through B is cheaper than direct)
+    log $ show path
+
+  NoPath -> log "unreachable"
+  SameNode -> log "same node"
+----
+
+=== Full Dijkstra Results
+
+For all distances from a source:
+
+[source,purescript]
+----
+let result = dijkstra (NodeId "A") graph
+
+-- result.distances: Map from each node to distance from A
+-- result.parents: Map from each node to its parent in shortest path tree
+-- result.visited: Nodes in order they were visited
+
+-- Reconstruct path to any reachable node using parents
+----
+
+== BFS (Unweighted)
+
+For unweighted graphs or when you need level-order traversal:
+
+[source,purescript]
+----
+import Data.Graph.Pathfinding (bfs, bfsFrom)
+
+-- Full BFS result
+let result = bfs (NodeId "A") graph
+-- result.distances: depth from A (0, 1, 2, ...)
+-- result.parents: parent in BFS tree
+-- result.visited: nodes in level order
+
+-- Just get nodes in BFS order
+let order = bfsFrom (NodeId "A") graph
+-- [NodeId "A", NodeId "B", NodeId "C", ...]
+----
+
+== DFS (Depth-First)
+
+For exploring paths deeply before backtracking:
+
+[source,purescript]
+----
+import Data.Graph.Pathfinding (dfs, dfsFrom)
+
+-- Full DFS result
+let result = dfs (NodeId "A") graph
+-- result.distances: discovery time
+-- result.parents: parent in DFS tree
+-- result.visited: nodes in DFS order
+
+-- Just get nodes in DFS order
+let order = dfsFrom (NodeId "A") graph
+----
+
+== PathResult Type
+
+The `shortestPath` function returns a `PathResult`:
+
+[source,purescript]
+----
+data PathResult
+  = PathFound { path :: Path, cost :: Number }
+  | NoPath
+  | SameNode
+----
+
+Handle all cases:
+
+[source,purescript]
+----
+showPath :: PathResult -> String
+showPath = case _ of
+  PathFound { path, cost } ->
+    "Path: " <> intercalate " → " (map show path) <>
+    " (cost: " <> show cost <> ")"
+
+  NoPath ->
+    "No path exists between nodes"
+
+  SameNode ->
+    "Start and goal are the same node"
+----
+
+== Traced Pathfinding
+
+For visualization, use the traced variants that record algorithm steps:
+
+[source,purescript]
+----
+import Data.Graph.Pathfinding.Traced (dijkstraTraced, TracedResult)
+
+let traced = dijkstraTraced (NodeId "A") (NodeId "C") graph
+-- traced.result: final PathResult
+-- traced.steps: Array of algorithm steps for animation
+----
+
+== Choosing an Algorithm
+
+[cols="1,2,2"]
+|===
+| Algorithm | Use When | Complexity
+
+| Dijkstra | Weighted graphs, positive weights | O((V + E) log V)
+| BFS | Unweighted graphs, level-order needed | O(V + E)
+| DFS | Exploring structure, cycle detection | O(V + E)
+|===
+
+== Next Steps
+
+* xref:how-to/shortest-paths.adoc[Shortest Paths] - Advanced pathfinding techniques
+* xref:getting-started/analysis.adoc[Graph Analysis] - Structural analysis

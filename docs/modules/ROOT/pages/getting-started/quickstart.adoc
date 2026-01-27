@@ -1,0 +1,144 @@
+= Quickstart
+:description: Get started with PSD3 Graph
+
+This guide introduces the basic graph types and operations.
+
+== Creating a Graph
+
+=== Using Data.Graph.Types
+
+The `Graph` type stores nodes, edges, and adjacency information:
+
+[source,purescript]
+----
+import Data.Graph.Types (Graph, NodeId(..), Edge, mkGraph)
+
+-- Define nodes
+nodes :: Array NodeId
+nodes = [ NodeId "A", NodeId "B", NodeId "C", NodeId "D" ]
+
+-- Define weighted edges
+edges :: Array Edge
+edges =
+  [ { from: NodeId "A", to: NodeId "B", weight: 1.0 }
+  , { from: NodeId "A", to: NodeId "C", weight: 4.0 }
+  , { from: NodeId "B", to: NodeId "C", weight: 2.0 }
+  , { from: NodeId "B", to: NodeId "D", weight: 5.0 }
+  , { from: NodeId "C", to: NodeId "D", weight: 1.0 }
+  ]
+
+-- Create graph
+graph :: Graph
+graph = mkGraph nodes edges
+----
+
+=== Using SimpleGraph
+
+For unweighted analysis, use `SimpleGraph`:
+
+[source,purescript]
+----
+import Data.Graph.Algorithms (SimpleGraph)
+import Data.Set as Set
+import Data.Map as Map
+
+simpleGraph :: SimpleGraph String
+simpleGraph =
+  { nodes: ["A", "B", "C", "D"]
+  , edges: Map.fromFoldable
+      [ Tuple "A" (Set.fromFoldable ["B", "C"])
+      , Tuple "B" (Set.fromFoldable ["C", "D"])
+      , Tuple "C" (Set.fromFoldable ["D"])
+      ]
+  }
+----
+
+== Basic Operations
+
+=== Getting Neighbors
+
+[source,purescript]
+----
+import Data.Graph.Types (neighbors)
+
+-- Get neighbors with weights
+let neighs = neighbors (NodeId "B") graph
+-- [ { neighbor: NodeId "C", weight: 2.0 }
+-- , { neighbor: NodeId "D", weight: 5.0 }
+-- ]
+----
+
+=== Checking Edge Weight
+
+[source,purescript]
+----
+import Data.Graph.Types (edgeWeight)
+
+let weight = edgeWeight (NodeId "A") (NodeId "B") graph
+-- Just 1.0
+----
+
+== Finding Paths
+
+[source,purescript]
+----
+import Data.Graph.Pathfinding (shortestPath, PathResult(..))
+
+case shortestPath (NodeId "A") (NodeId "D") graph of
+  PathFound { path, cost } ->
+    log $ "Shortest path: " <> show path <> ", cost: " <> show cost
+    -- Shortest path: [A, B, C, D], cost: 4.0
+
+  NoPath ->
+    log "No path exists"
+
+  SameNode ->
+    log "Start and goal are the same"
+----
+
+== Analyzing Structure
+
+[source,purescript]
+----
+import Data.Graph.Algorithms (graphMetrics, hasCycle, isConnected)
+
+let metrics = graphMetrics simpleGraph
+-- { nodeCount: 4
+-- , edgeCount: 5
+-- , density: 0.417
+-- , averageDegree: 2.5
+-- , isConnected: true
+-- , isDAG: true
+-- , componentCount: 1
+-- }
+
+let cyclic = hasCycle simpleGraph  -- false
+let connected = isConnected simpleGraph  -- true
+----
+
+== Converting Between Formats
+
+[source,purescript]
+----
+import Data.Graph.Algorithms (TaskNode, taskNodesToSimpleGraph, simpleGraphToTaskNodes)
+
+-- Task nodes (dependency format)
+taskNodes :: Array (TaskNode String)
+taskNodes =
+  [ { id: "compile", depends: [] }
+  , { id: "test", depends: ["compile"] }
+  , { id: "deploy", depends: ["test"] }
+  ]
+
+-- Convert to SimpleGraph
+let graph = taskNodesToSimpleGraph taskNodes
+
+-- Convert back
+let tasks = simpleGraphToTaskNodes graph
+----
+
+== Next Steps
+
+* xref:getting-started/pathfinding.adoc[Pathfinding] - Detailed pathfinding guide
+* xref:getting-started/analysis.adoc[Graph Analysis] - Structural analysis
+* xref:reference/module-overview.adoc[Module Overview] - Full API reference

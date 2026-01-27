@@ -1,0 +1,5 @@
+name: psd3-graph
+title: PSD3 Graph
+version: ~
+nav:
+  - modules/ROOT/nav.adoc

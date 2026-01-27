@@ -17,6 +17,3 @@ package:
 workspace:
   packageSet:
     registry: 67.0.1
-  extraPackages:
-    psd3-tree:
-      path: ../purescript-psd3-tree
