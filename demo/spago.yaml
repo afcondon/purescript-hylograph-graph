@@ -1,0 +1,25 @@
+package:
+  name: hylograph-graph-demo
+  description: "Honeycomb Puzzle: A* pathfinding on hexagonal graphs"
+  dependencies:
+    - aff
+    - arrays
+    - effect
+    - foldable-traversable
+    - halogen
+    - integers
+    - maybe
+    - nullable
+    - numbers
+    - ordered-collections
+    - prelude
+    - hylograph-d3-kernel
+    - hylograph-graph
+    - hylograph-simulation-halogen
+    - random
+    - tuples
+
+  bundle:
+    module: Honeycomb.Main
+    outfile: public/bundle.js
+    platform: browser

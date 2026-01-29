@@ -1,5 +1,24 @@
+workspace:
+  packageSet:
+    registry: 67.0.1
+  extraPackages:
+    hylograph-selection:
+      path: "../purescript-hylograph-selection"
+    hylograph-transitions:
+      path: "../purescript-hylograph-transitions"
+    hylograph-layout:
+      path: "../purescript-hylograph-layout"
+    hylograph-simulation-core:
+      path: "../purescript-hylograph-simulation-core"
+    hylograph-d3-kernel:
+      path: "../purescript-hylograph-d3-kernel"
+    hylograph-simulation:
+      path: "../purescript-hylograph-simulation"
+    hylograph-simulation-halogen:
+      path: "../purescript-hylograph-simulation-halogen"
+
 package:
-  name: psd3-graph
+  name: hylograph-graph
   dependencies:
     - arrays
     - control
@@ -13,7 +32,3 @@ package:
     - prelude
     - tree-rose
     - tuples
-
-workspace:
-  packageSet:
-    registry: 67.0.1

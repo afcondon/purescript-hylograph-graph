@@ -40,7 +40,7 @@
 -- | -- Render with Tree API
 -- | renderDAGTree positioned linkGenerator
 -- | ```
-module PSD3.Data.DAGTree
+module Hylograph.Data.DAGTree
   ( -- * Types
     DAGTree
   , DAGLink
