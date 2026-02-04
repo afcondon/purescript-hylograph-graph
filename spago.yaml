@@ -29,6 +29,7 @@ package:
   dependencies:
     - arrays
     - control
+    - either
     - foldable-traversable
     - free
     - graphs
@@ -39,3 +40,8 @@ package:
     - prelude
     - tree-rose
     - tuples
+  test:
+    main: Test.Main
+    dependencies:
+      - effect
+      - console
