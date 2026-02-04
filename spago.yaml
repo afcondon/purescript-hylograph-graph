@@ -19,6 +19,13 @@ workspace:
 
 package:
   name: hylograph-graph
+  description: Graph data structures and algorithms for Hylograph visualizations
+  publish:
+    version: 0.1.0
+    license: MIT
+    location:
+      githubOwner: afcondon
+      githubRepo: purescript-hylograph-graph
   dependencies:
     - arrays
     - control

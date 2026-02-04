@@ -1,5 +1,5 @@
 = Quickstart
-:description: Get started with PSD3 Graph
+:description: Get started with Hylograph Graph
 
 This guide introduces the basic graph types and operations.
 

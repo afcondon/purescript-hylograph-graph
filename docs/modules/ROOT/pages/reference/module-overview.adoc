@@ -1,5 +1,5 @@
 = Module Overview
-:description: Reference for all PSD3 Graph modules
+:description: Reference for all Hylograph Graph modules
 
 == Data.Graph.Types
 
@@ -208,10 +208,10 @@ Graph layout utilities.
 
 [source,purescript]
 ----
--- Integrates with psd3-simulation for force-directed layout
+-- Integrates with hylograph-simulation for force-directed layout
 ----
 
-== PSD3.Data.DAGTree
+== Hylograph.Data.DAGTree
 
 Directed Acyclic Graph as a tree structure.
 

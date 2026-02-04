@@ -1,4 +1,4 @@
-# purescript-psd3-graph
+# purescript-hylograph-graph
 
 [![Honeycomb Puzzle Demo](../../site/lib-graph/public/demo.jpeg)](/honeycomb/)
 
@@ -6,7 +6,7 @@ Graph algorithms and data structures for PureScript, designed for visualization.
 
 ## Overview
 
-This package provides graph algorithms with optional tracing for visualization, consolidating graph-related code from the PSD3 ecosystem.
+This package provides graph algorithms with optional tracing for visualization, consolidating graph-related code from the Hylograph ecosystem.
 
 ## Features
 
@@ -27,7 +27,7 @@ This package provides graph algorithms with optional tracing for visualization, 
 ## Installation
 
 ```bash
-spago install psd3-graph
+spago install hylograph-graph
 ```
 
 ## Usage
@@ -49,13 +49,23 @@ import Data.Graph.Pathfinding.Traced (findPathTraced)
 -- Use `steps` to animate the algorithm
 ```
 
-## Part of PSD3
+## Modules
 
-This package is part of the PSD3 (PureScript D3) family:
+- `Data.Graph.Pathfinding` - Basic pathfinding algorithms
+- `Data.Graph.Pathfinding.Traced` - Pathfinding with step-by-step tracing
+- `Data.Graph.Algorithms` - Graph analysis (reachability, reduction)
+- `Data.Graph.Layout` - Position helpers for graph visualization
+- `Data.Graph.Types` - Core graph types
+- `Hylograph.Data.DAGTree` - Hybrid DAG/tree structure
 
-- **psd3-graph** - Graph algorithms (this package)
-- **psd3-selection** - Type-safe D3 selection and rendering
-- **psd3-simulation** - Force-directed graph simulation
+## Part of Hylograph
+
+This package is part of the Hylograph visualization ecosystem:
+
+- **hylograph-graph** - Graph algorithms (this package)
+- **hylograph-selection** - Type-safe D3 selection and rendering
+- **hylograph-simulation** - Force-directed graph simulation
+- **hylograph-layout** - Layout algorithms
 
 ## License
 

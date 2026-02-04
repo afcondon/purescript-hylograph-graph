@@ -1,7 +1,7 @@
 = Pathfinding
 :description: Finding paths through graphs
 
-PSD3 Graph provides several pathfinding algorithms for different use cases.
+Hylograph Graph provides several pathfinding algorithms for different use cases.
 
 == Dijkstra's Algorithm (Weighted)
 

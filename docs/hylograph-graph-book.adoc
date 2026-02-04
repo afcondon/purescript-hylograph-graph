@@ -1,4 +1,4 @@
-= PSD3 Graph
+= Hylograph Graph
 :doctype: book
 :toc: left
 :toclevels: 3

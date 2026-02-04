@@ -1,11 +1,11 @@
-= PSD3 Graph
+= Hylograph Graph
 :description: Graph data structures and algorithms for PureScript
 
 Pure PureScript implementations of graph data structures and algorithms for analysis and visualization.
 
-== What is PSD3 Graph?
+== What is Hylograph Graph?
 
-PSD3 Graph provides core graph types and algorithms commonly needed for data visualization and analysis. All algorithms are pure functions with no side effects.
+Hylograph Graph provides core graph types and algorithms commonly needed for data visualization and analysis. All algorithms are pure functions with no side effects.
 
 [source,purescript]
 ----
@@ -68,13 +68,13 @@ case shortestPath (NodeId "A") (NodeId "C") graph of
 
 [source,bash]
 ----
-spago install psd3-graph
+spago install hylograph-graph
 ----
 
-== Part of the PSD3 Ecosystem
+== Part of the Hylograph Ecosystem
 
-* *psd3-tree* - Tree data structures (dependency)
-* *psd3-selection* - D3 selection and rendering library
-* *psd3-simulation* - Force simulation engine
-* *psd3-layout* - Layout algorithms
-* *psd3-graph* - Graph algorithms (this package)
+* *hylograph-graph* - Tree data structures (dependency)
+* *hylograph-selection* - D3 selection and rendering library
+* *hylograph-simulation* - Force simulation engine
+* *hylograph-layout* - Layout algorithms
+* *hylograph-graph* - Graph algorithms (this package)
