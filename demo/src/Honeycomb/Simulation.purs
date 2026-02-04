@@ -17,6 +17,7 @@ import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
+import Honeycomb.Math (cos, sin, pi)
 
 import Hylograph.Kernel.D3.Simulation (SimulationNode, defaultConfig)
 import Hylograph.Kernel.D3.SimulationGroup as Group
@@ -167,13 +168,3 @@ getAllPositions group = do
   getOne acc idx = do
     positions <- getPositionsAt idx group
     pure $ Array.snoc acc positions
-
--- =============================================================================
--- Math helpers (FFI)
--- =============================================================================
-
-foreign import cos :: Number -> Number
-foreign import sin :: Number -> Number
-
-pi :: Number
-pi = 3.14159265358979323846
