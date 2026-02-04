@@ -1,3 +1,20 @@
+-- | Graph algorithms for directed graphs.
+-- |
+-- | This module provides a comprehensive suite of algorithms for analyzing
+-- | directed graphs, including:
+-- |
+-- | - **Reachability**: BFS-based traversal to find all reachable nodes
+-- | - **Topological Sort**: Layer computation for DAGs using `Data.Graph`
+-- | - **Transitive Reduction**: Remove redundant edges while preserving reachability
+-- | - **Cycle Detection**: DFS with three-color marking to find cycles
+-- | - **Connected Components**: Find components treating graph as undirected
+-- | - **Strongly Connected Components**: Tarjan's algorithm for directed components
+-- | - **Centrality Measures**: In-degree, out-degree, and combined centrality
+-- | - **PageRank**: Iterative importance scoring with configurable damping
+-- | - **Community Detection**: Label propagation with modularity scoring
+-- |
+-- | All algorithms work with `SimpleGraph`, a simple adjacency-list representation.
+-- | Convert to/from `TaskNode` arrays using the conversion utilities.
 module Data.Graph.Algorithms
   ( -- Types
     SimpleGraph
@@ -44,9 +61,6 @@ module Data.Graph.Algorithms
   , taskNodesToSimpleGraph
   , simpleGraphToTaskNodes
   ) where
-
--- | Graph algorithms for DAGs (Directed Acyclic Graphs)
--- | Provides topological sort, transitive reduction, and reachability analysis
 
 import Prelude
 

@@ -57,9 +57,10 @@ type LayoutNode node =
 
 -- | Configuration for layout algorithms
 type LayoutConfig =
-  { nodeWidth :: Number      -- Horizontal spacing between nodes
-  , nodeHeight :: Number     -- Vertical spacing between layers
+  { nodeWidth :: Number      -- Spacing between nodes within a layer
+  , nodeHeight :: Number     -- Spacing between layers
   , orientation :: TreeLayout
+  , reversed :: Boolean      -- Reverse layer direction (right-to-left for Horizontal, bottom-to-top for Vertical)
   }
 
 -- | Default layout configuration
@@ -68,6 +69,7 @@ defaultLayoutConfig =
   { nodeWidth: 100.0
   , nodeHeight: 80.0
   , orientation: Vertical
+  , reversed: false
   }
 
 -- =============================================================================
@@ -335,20 +337,32 @@ buildReverseEdges' edges =
   ) Map.empty (Map.toUnfoldable edges :: Array (Tuple node (Set node)))
 
 -- | Assign x,y coordinates based on layer ordering
+-- | Respects orientation: Vertical (layers top-to-bottom), Horizontal (layers left-to-right)
+-- | When reversed: Vertical = bottom-to-top, Horizontal = right-to-left
 assignCoordinates :: forall node. Ord node
   => LayoutConfig
   -> Map Int (Array node)
   -> Map node { x :: Number, y :: Number, layer :: Int }
 assignCoordinates config layerGroups =
+  let
+    maxLayer = fromMaybe 0 $ maximum $ Map.keys layerGroups
+  in
   foldl (\acc (Tuple layer nodes) ->
     let
       count = Array.length nodes
-      -- Center the layer
-      startX = -(toNumber (count - 1) * config.nodeWidth / 2.0)
-      y = toNumber layer * config.nodeHeight
+      -- Position along the layer (perpendicular to layer direction)
+      startCross = -(toNumber (count - 1) * config.nodeWidth / 2.0)
+      -- Position of the layer itself (optionally reversed)
+      effectiveLayer = if config.reversed then maxLayer - layer else layer
+      layerPos = toNumber effectiveLayer * config.nodeHeight
     in foldl (\a (Tuple idx node) ->
-         let x = startX + toNumber idx * config.nodeWidth
-         in Map.insert node { x, y, layer } a
+         let crossPos = startCross + toNumber idx * config.nodeWidth
+             -- Apply orientation: Vertical = layers are rows, Horizontal = layers are columns
+             pos = case config.orientation of
+               Vertical -> { x: crossPos, y: layerPos, layer }
+               Horizontal -> { x: layerPos, y: crossPos, layer }
+               Radial -> { x: crossPos, y: layerPos, layer }  -- Radial needs post-processing
+         in Map.insert node pos a
        ) acc (Array.mapWithIndex (\i n -> Tuple i n) nodes)
   ) Map.empty (Map.toUnfoldable layerGroups :: Array (Tuple Int (Array node)))
 
