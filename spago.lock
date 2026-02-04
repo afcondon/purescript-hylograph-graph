@@ -9,9 +9,6 @@
               "arrays": ">=7.3.0 <8.0.0"
             },
             {
-              "control": ">=6.0.0 <7.0.0"
-            },
-            {
               "either": ">=6.1.0 <7.0.0"
             },
             {
@@ -31,6 +28,9 @@
             },
             {
               "maybe": ">=6.0.0 <7.0.0"
+            },
+            {
+              "numbers": ">=9.0.1 <10.0.0"
             },
             {
               "ordered-collections": ">=3.2.0 <4.0.0"
@@ -1300,7 +1300,6 @@
       "dependencies": [
         "arrays",
         "effect",
-        "foldable-traversable",
         "foreign-object",
         "integers",
         "maybe",
