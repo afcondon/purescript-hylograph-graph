@@ -3,16 +3,18 @@ module Decomposition.Component where
 
 import Prelude
 
-import Data.Array (mapWithIndex, (!!))
+import Data.Array (mapWithIndex, snoc, (!!))
+import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Effect.Class (liftEffect)
-import Effect.Aff.Class (class MonadAff)
+import Effect.Aff.Class (class MonadAff, liftAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Hylograph.HATS.InterpreterTick (clearContainer, rerender)
 
+import Decomposition.ForceLayout (loadMiserables)
 import Decomposition.Graphs (ShowcaseGraph, allShowcaseGraphs)
 import Decomposition.Render as R
 
@@ -36,6 +38,9 @@ chimeraStyles =
   , { style: StyleOrbital, label: "Orbital", desc: "Blocks as bodies in space, form matches structure" }
   ]
 
+mkEntry :: ShowcaseGraph -> Entry
+mkEntry sg = { showcase: sg, info: R.analyzeGraph sg.graph }
+
 type State =
   { currentIndex :: Int
   , chimeraStyle :: ChimeraStyle
@@ -55,10 +60,7 @@ component =
     { initialState: \_ ->
         { currentIndex: 0
         , chimeraStyle: StyleExtracted
-        , graphs: map (\sg ->
-            { showcase: sg
-            , info: R.analyzeGraph sg.graph
-            }) allShowcaseGraphs
+        , graphs: map mkEntry allShowcaseGraphs
         }
     , render
     , eval: H.mkEval H.defaultEval
@@ -170,6 +172,12 @@ chimeraDesc StyleOrbital = "Blocks as bodies in space — shape encodes structur
 handleAction :: forall o m. MonadAff m => Action -> H.HalogenM State Action () o m Unit
 handleAction = case _ of
   Initialize -> do
+    -- Load Les Miserables asynchronously, add as a tab when ready
+    result <- liftAff loadMiserables
+    case result of
+      Right sg -> do
+        H.modify_ \s -> s { graphs = snoc s.graphs (mkEntry sg) }
+      Left _ -> pure unit  -- silently skip if fetch fails
     renderCurrentHATS
 
   GoTo i -> do
