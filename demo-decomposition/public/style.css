@@ -1,0 +1,301 @@
+/* Graph Decomposition Demo — Swiss/International style */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, 'Helvetica Neue', Helvetica, sans-serif;
+  background: #fafafa;
+  color: #222;
+  min-height: 100vh;
+}
+
+/* Container */
+.decomp-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 32px;
+}
+
+/* Header */
+.decomp-header {
+  margin-bottom: 32px;
+}
+
+.decomp-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.decomp-subtitle {
+  font-size: 15px;
+  color: #666;
+}
+
+/* Tabs */
+.decomp-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.decomp-tab {
+  padding: 10px 24px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.decomp-tab:hover {
+  color: #333;
+}
+
+.decomp-tab.active {
+  color: #222;
+  border-bottom-color: #222;
+}
+
+/* Main layout: content + sidebar */
+.decomp-main {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.decomp-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Section: annotated or chimera */
+.decomp-section {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 20px;
+}
+
+.decomp-section h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.decomp-viz {
+  width: 100%;
+}
+
+.decomp-viz svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Side-by-side row: matrix + chimera */
+.decomp-row {
+  display: flex;
+  gap: 16px;
+}
+
+.decomp-matrix-section {
+  flex: 0 0 auto;
+  width: 340px;
+}
+
+.decomp-chimera-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.chimera-desc {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+/* Chimera header with style selector */
+.chimera-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.chimera-header h2 {
+  margin-bottom: 0;
+}
+
+.chimera-styles {
+  display: flex;
+  gap: 2px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.chimera-style-btn {
+  padding: 5px 12px;
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.chimera-style-btn:hover {
+  color: #444;
+}
+
+.chimera-style-btn.active {
+  background: #fff;
+  color: #222;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Chimera legend */
+.chimera-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.chimera-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #666;
+}
+
+/* Sidebar */
+.decomp-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.decomp-sidebar h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.decomp-description {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+/* Metrics panel */
+.metrics-panel {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.metric-row:last-child {
+  border-bottom: none;
+}
+
+.metric-label {
+  color: #666;
+}
+
+.metric-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Legend */
+.decomp-legend {
+  padding: 12px 0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-swatch.diamond {
+  border-radius: 0;
+  transform: rotate(45deg);
+  width: 12px;
+  height: 12px;
+}
+
+.legend-sep {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 8px 0;
+}
+
+.legend-note {
+  font-size: 12px;
+  color: #999;
+}
+
+/* Footer */
+.decomp-footer {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.decomp-footer p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
+  margin-bottom: 12px;
+  max-width: 720px;
+}
+
+.decomp-footer strong {
+  color: #333;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .decomp-main {
+    flex-direction: column;
+  }
+  .decomp-sidebar {
+    width: 100%;
+  }
+}
