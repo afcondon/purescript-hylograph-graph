@@ -36,6 +36,7 @@ module Data.Graph.Algorithms
   , hasCycle
   , findCycle
   , isDAG
+  , findBackEdges
     -- Connected components
   , connectedComponents
   , isConnected
@@ -74,7 +75,7 @@ import Data.List (List)
 import Data.List as List
 import Data.Map (Map)
 import Data.Map as Map
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (Tuple(..))
@@ -299,6 +300,7 @@ findCycle graph =
   in result.cycle
   where
   dfs state node
+    | isJust state.cycle = state  -- Already found a cycle, stop exploring
     | Set.member node state.gray =
         -- Found a back edge - we have a cycle!
         -- Extract the cycle from path
@@ -334,6 +336,44 @@ findCycle graph =
 -- | Check if graph is a DAG (Directed Acyclic Graph)
 isDAG :: forall node. Ord node => SimpleGraph node -> Boolean
 isDAG = not <<< hasCycle
+
+-- | Find all back-edges in a directed graph using DFS three-color marking.
+-- |
+-- | A back-edge (u, v) exists when v is an ancestor of u in the DFS tree
+-- | (i.e., v is gray/in-stack when visited from u). Removing all back-edges
+-- | from a graph makes it acyclic — the returned set is a feedback arc set.
+-- |
+-- | Unlike `findCycle` which returns one cycle, this finds ALL back-edges
+-- | in a single O(V+E) pass. Useful for layout engines that need to
+-- | temporarily reverse or remove cycles.
+findBackEdges :: forall node. Ord node => SimpleGraph node -> Set (Tuple node node)
+findBackEdges graph =
+  let
+    initial = { white: Set.fromFoldable graph.nodes, gray: Set.empty, black: Set.empty, backEdges: Set.empty }
+    result = foldl (\state node ->
+      if Set.member node state.white then dfsClassify state node
+      else state
+    ) initial graph.nodes
+  in result.backEdges
+  where
+  dfsClassify state node =
+    let
+      state' = state
+        { white = Set.delete node state.white
+        , gray = Set.insert node state.gray
+        }
+      targets = case Map.lookup node graph.edges of
+        Nothing -> []
+        Just ts -> Set.toUnfoldable ts
+      state'' = foldl (\st target ->
+        if Set.member target st.gray then
+          st { backEdges = Set.insert (Tuple node target) st.backEdges }
+        else if Set.member target st.white then
+          dfsClassify st target
+        else st
+      ) state' targets
+    in
+      state'' { gray = Set.delete node state''.gray, black = Set.insert node state''.black }
 
 -- =============================================================================
 -- || Connected Components

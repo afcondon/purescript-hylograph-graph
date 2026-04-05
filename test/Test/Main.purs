@@ -13,6 +13,8 @@ import Data.Maybe (Maybe(..))
 import Data.Set as Set
 import Effect (Effect)
 import Effect.Console (log)
+import Test.Algorithms (testAlgorithms)
+import Test.Pathfinding (testPathfinding)
 
 -- Simple test utilities
 assert :: String -> Boolean -> Effect Unit
@@ -66,6 +68,12 @@ main = do
   log ""
   log "=== Decomposition Tests ==="
   testDecomposition
+  log ""
+  log "=== Algorithms Tests ==="
+  testAlgorithms
+  log ""
+  log "=== Pathfinding Tests ==="
+  testPathfinding
   log ""
   log "=== All tests completed ==="
 
