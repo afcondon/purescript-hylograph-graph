@@ -1,8 +1,10 @@
 # purescript-hylograph-graph
 
-[![Honeycomb Puzzle Demo](https://afcondon.github.io/purescript-hylograph-demos/thumbnails/graph.jpg)](https://afcondon.github.io/purescript-hylograph-demos/graph/)
-
 Graph algorithms and data structures for PureScript, designed for visualization.
+
+Live interactive demo can be seen as part of the [suite of Hylograph library demos](https://afcondon.github.io/purescript-hylograph-demos/). Click the screenshot below for **The Honeycomb** puzzle.
+
+[![Honeycomb Puzzle Demo](https://afcondon.github.io/purescript-hylograph-demos/thumbnails/graph.jpg)](https://afcondon.github.io/purescript-hylograph-demos/graph/)
 
 ## Overview
 
