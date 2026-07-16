@@ -14,6 +14,7 @@ import Data.Set as Set
 import Effect (Effect)
 import Effect.Console (log)
 import Test.Algorithms (testAlgorithms)
+import Test.Matching (testMatching)
 import Test.Pathfinding (testPathfinding)
 
 -- Simple test utilities
@@ -74,6 +75,7 @@ main = do
   log ""
   log "=== Pathfinding Tests ==="
   testPathfinding
+  testMatching
   log ""
   log "=== All tests completed ==="
 
