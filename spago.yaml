@@ -1,5 +1,6 @@
 workspace:
-  # Solver mode - all dependencies from registry
+  packageSet:
+    registry: 77.13.1
   extraPackages: {}
 
 package:
