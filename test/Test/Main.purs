@@ -14,6 +14,7 @@ import Data.Set as Set
 import Effect (Effect)
 import Effect.Console (log)
 import Test.Algorithms (testAlgorithms)
+import Test.InducedTree (testInducedTree)
 import Test.Matching (testMatching)
 import Test.Pathfinding (testPathfinding)
 
@@ -75,6 +76,9 @@ main = do
   log ""
   log "=== Pathfinding Tests ==="
   testPathfinding
+  log ""
+  log "=== Induced Tree Tests ==="
+  testInducedTree
   testMatching
   log ""
   log "=== All tests completed ==="

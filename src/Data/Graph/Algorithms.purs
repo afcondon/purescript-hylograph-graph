@@ -21,8 +21,14 @@ module Data.Graph.Algorithms
   , TaskNode
   , LayeredNode
   , GraphMetrics
+    -- Construction and transformation
+  , mkSimpleGraph
+  , reverseGraph
     -- Reachability
   , reachableFrom
+  , SearchTree
+  , bfsTree
+  , treePath
     -- Topological sort
   , buildGraph
   , getTopologicalOrder
@@ -91,6 +97,32 @@ type SimpleGraph node =
   }
 
 -- =============================================================================
+-- || Construction and Transformation
+-- =============================================================================
+
+-- | Build a directed graph from an explicit node list and a list of edges.
+-- |
+-- | The node list is separate from the edges on purpose: a node with no edges
+-- | at all is still a node, and an analysis that only ever saw the edge list
+-- | would quietly lose it.
+mkSimpleGraph :: forall node. Ord node => Array node -> Array (Tuple node node) -> SimpleGraph node
+mkSimpleGraph nodes edges =
+  { nodes
+  , edges: foldl addEdge Map.empty edges
+  }
+  where
+  addEdge acc (Tuple source target) =
+    Map.alter (Just <<< Set.insert target <<< fromMaybe Set.empty) source acc
+
+-- | Reverse every edge, keeping the node set.
+-- |
+-- | Searching the reverse graph answers the other half of every directional
+-- | question: forwards gives the fewest steps *to* a node, backwards the fewest
+-- | steps *from* it back to where you started.
+reverseGraph :: forall node. Ord node => SimpleGraph node -> SimpleGraph node
+reverseGraph graph = { nodes: graph.nodes, edges: buildReverseEdges graph }
+
+-- =============================================================================
 -- || Reachability Analysis
 -- =============================================================================
 
@@ -114,6 +146,95 @@ reachableFrom start graph =
             newNodes = Set.difference neighbors visited
           in
             go (Set.union visited frontier) newNodes
+
+-- | The tree a breadth-first search builds, and how deep each node sits in it.
+-- |
+-- | `depth` is the unweighted shortest distance from the start; `parent` records
+-- | how the search first arrived, which is what makes the result a *tree* rather
+-- | than a set; `order` is the visit order, start node first.
+type SearchTree node =
+  { depth :: Map node Int
+  , parent :: Map node node
+  , order :: Array node
+  }
+
+-- | Breadth-first search that follows edges in the direction they were declared.
+-- |
+-- | This is the directed counterpart to `Data.Graph.Pathfinding.bfs`, which is
+-- | tied to the concrete `Graph`/`NodeId` types and treats every edge as
+-- | bidirectional (`Data.Graph.Types.buildAdjacency` inserts both directions).
+-- | Direction is not a detail for a graph that models navigation, dependency or
+-- | control flow: "in by one step, out by four" is the most useful question you
+-- | can ask of one, and it is meaningless without it.
+-- |
+-- | Expanding the frontier a layer at a time is what makes `depth` correct by
+-- | construction — every node in layer *n* is discovered before any node in
+-- | layer *n + 1* is expanded, so the first parent to claim a node is on a
+-- | shortest path to it.
+bfsTree :: forall node. Ord node => node -> SimpleGraph node -> SearchTree node
+bfsTree start graph = expandLayer seed 1 [ start ]
+  where
+  seed :: SearchTree node
+  seed = { depth: Map.singleton start 0, parent: Map.empty, order: [ start ] }
+
+  expandLayer :: SearchTree node -> Int -> Array node -> SearchTree node
+  expandLayer tree depth frontier
+    | Array.null frontier = tree
+    | otherwise =
+        let
+          stepped = foldl (expandNode depth) { tree, next: [] } frontier
+        in
+          expandLayer stepped.tree (depth + 1) stepped.next
+
+  expandNode
+    :: Int
+    -> { tree :: SearchTree node, next :: Array node }
+    -> node
+    -> { tree :: SearchTree node, next :: Array node }
+  expandNode depth acc source =
+    foldl (discover depth source) acc (targetsOf source)
+
+  targetsOf :: node -> Array node
+  targetsOf source = Set.toUnfoldable $ fromMaybe Set.empty $ Map.lookup source graph.edges
+
+  discover
+    :: Int
+    -> node
+    -> { tree :: SearchTree node, next :: Array node }
+    -> node
+    -> { tree :: SearchTree node, next :: Array node }
+  discover depth source acc target
+    | Map.member target acc.tree.depth = acc
+    | otherwise =
+        { tree: acc.tree
+            { depth = Map.insert target depth acc.tree.depth
+            , parent = Map.insert target source acc.tree.parent
+            , order = Array.snoc acc.tree.order target
+            }
+        , next: Array.snoc acc.next target
+        }
+
+-- | The route the search took to a node, start node first.
+-- |
+-- | Empty for a node the search never reached — there is no such route, and a
+-- | singleton array would be a lie about a node that is merely isolated.
+-- |
+-- | Row-polymorphic in the rest of the record so that anything which *contains*
+-- | a search tree — `Data.Graph.InducedTree.Induced`, say — can be walked
+-- | directly rather than having one carved back out of it.
+treePath
+  :: forall node r
+   . Ord node
+  => { depth :: Map node Int, parent :: Map node node | r }
+  -> node
+  -> Array node
+treePath tree node
+  | not (Map.member node tree.depth) = []
+  | otherwise = Array.reverse (climb node [ node ])
+      where
+      climb n acc = case Map.lookup n tree.parent of
+        Nothing -> acc
+        Just parent -> climb parent (Array.snoc acc parent)
 
 -- =============================================================================
 -- || Topological Sort with Layers
