@@ -1,6 +1,6 @@
 workspace:
   packageSet:
-    registry: 77.13.1
+    registry: 80.8.0
   extraPackages: {}
 
 package:
